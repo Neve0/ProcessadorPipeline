@@ -1,0 +1,7 @@
+BancoReg.v
+Controle.v
+Datapath.v
+ImmGen.v
+parametros.v
+Pipeline.v
+ULA.v
