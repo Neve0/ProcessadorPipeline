@@ -17,7 +17,7 @@ module TopDE (
 	wire [31:0] regout, pc, instr;
 	wire [31:0] in;
 	
-	Pipeline PIP1 (.clockCPU( ~KEY[3]), .clockMem(clock), .reset(~KEY[0]), 
+	Uniciclo UNI1 (.clockCPU(clockCPU), .clockMem(clock), .reset(~KEY[0]), 
 						.PC(pc), .Instr(instr), .regin(SW[9:5]), .regout(regout));
 	
 	always @(*)

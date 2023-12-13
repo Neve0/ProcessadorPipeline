@@ -8,7 +8,7 @@ module Controle (
 	output reg 		 oMemWrite,
 	output reg 		 oALUSrc,
 	output reg 		 oRegWrite,
-	output reg [1:0] oOrigPC
+	output reg [1:0] oOrigPC;
 	);
 
 	`include "parametros.v"
@@ -125,7 +125,7 @@ module Controle (
 		$display("Branch=%b", oBranch);
 		$display("ALUControl=%b", oALUControl);
 		$display("OrigPC=%b", oOrigPC);*/
-		///////////////////////////////////////
+	2///1////////////////////////////////////
 	end
 		
 endmodule

@@ -45,7 +45,7 @@ reg [105:0]	RegEXMEM;
 //RdID 5
 //Controle 8
 
-reg [99:0] RegMEMWB;
+reg [ 67:0] RegMEMWB
 //PC+4 32
 //RdID 5
 //AluResult 32
@@ -74,7 +74,7 @@ initial
 
 wire [31:0] IwReadData;
 
-romI INSTRUCTMEM (
+rom INSTRUCTMEM (
 	.address(PC[9:0]/4),
 	.clock(iClkMem),
 	.q(IwReadData)
@@ -97,8 +97,8 @@ always @(*)
 begin
 	case (iOrigPC)
 		2'b00: 	 	wIF_iPC <= wPC4;
-		2'b01: 	 	wIF_iPC <= (wEX_Zero & iBranch) ? wEX_BranchPC : wPC4;
-		2'b10: 	 	wIF_iPC <= wEX_BranchPC; 
+		2'b01: 	 	wIF_iPC <= (oZero & iBranch) ? wEX_BranchPC : wPC4;
+		2'b10: 	 	wIF_iPC <= wID_BranchPC; 
 		default: 	wIF_iPC <= wPC4;
 	endcase	
 end
@@ -145,7 +145,7 @@ BancoReg REGISTRADORES (
 	.iReadReg1(wID_Rs1),
 	.iReadReg2(wID_Rs2),
 	.iWriteReg(wWB_RdID),
-	.iWriteData(wWB_RegData),
+	.iWriteData(wWB_RegWrite),
 	.iRegDispSelect(iregin),
 	.oReadData1(wID_Read1),
 	.oReadData2(wID_Read2),
@@ -215,10 +215,10 @@ wire [31:0] wEX_OrigBULA;
 
 always @(*)
 begin
-	case(wEX_ALUSrc)
+	case(ALUSrc)
 		1'b0: 	 wEX_OrigBULA <= wEX_Read2;
 		1'b1: 	 wEX_OrigBULA <= wEX_Imm; 
-		default:  wEX_OrigBULA <= wEX_Read2;
+		default: wEX_OrigBULA <= wEX_Read2;
 	endcase
 end
 
@@ -243,21 +243,20 @@ end
 //======================== Estagio MEM ================================//
 //=====================================================================//
 
-wire [31:0] wMEM_ALUResult = RegEXMEM[31:0];
+wire [31:0] wMEM_AluResult = RegEXMEM[31:0];
 wire [31:0] wMEM_Rd2Result = RegEXMEM[95:64];
-wire 			wMEM_MemRead   = RegEXMEM[101]; 	
-wire 			wMEM_MemWrite  = RegEXMEM[104]; 	
+wire 		wMEM_MemRead   = RegEXMEM[101]; 	
+wire 		wMEM_MemWrite  = RegEXMEM[104]; 	
 
 
 //Memoria de dados
 wire [31:0] wMEM_DataMemOutput;
 
-ramD DATAMEM (
+ram DATAMEM (
 	.address(wMEM_ALUResult[9:0]/4),
 	.clock(iClkMem),
 	.data(wMEM_Rd2Result),
-	.wren(wMEM_MemWrite),
-	.rden(wMEM_MemRead),
+	.wren(iMemWrite),
 	.q(wMEM_DataMemOutput)
 	);
 ///////////////////////////////////////
@@ -269,7 +268,7 @@ begin
 			RegMEMWB <= {100 {1'b0}};
 	else
 		begin
-			RegMEMWB[31:0 ] <= wMEM_ALUResult; 
+			RegMEMWB[31:0 ] <= wMEM_AluResult; 
 			RegMEMWB[63:32] <= RegEXMEM[63:32  ]; //PC+4
 			RegMEMWB[68:64] <= RegEXMEM[100:96 ]; //RdID
 			RegMEMWB[66:65] <= RegEXMEM[103:102]; //MemtoReg
@@ -285,20 +284,20 @@ end
 
 wire [31:0] wWB_ReadData  = RegMEMWB[99:68];
 wire [31:0] wWB_ALUResult = RegMEMWB[31:0 ];
-wire [31:0] wWB_PC4 	  	  = RegMEMWB[63:32];
+wire [31:0] wWB_PC4 	  = RegMEMWB[63:32];
 wire [31:0] wWB_RdID 	  = RegMEMWB[68:64];
 wire [1:0 ] wWB_MemtoReg  = RegMEMWB[66:65];
-wire 			wWB_RegWrite  = RegMEMWB[67   ];
+wire 		wWB_RegWrite  = RegMEMWB[67   ];
 
 //Multiplexadores 
-wire[31:0] wWB_RegData;
+wire[31:0] wWB_RegWrite ;
 
 always @(*)
 begin
 	case (wWB_MemtoReg)
-		2'b00: wWB_RegData <= wWB_ALUResult;
-		2'b01: wWB_RegData <= wWB_ReadData;
-		2'b10: wWB_RegData <= wWB_PC4;
+		2'b00: wWB_RegWrite <= wWB_ALUResult;
+		2'b01: wWB_RegWrite <= wWB_ReadData;
+		2'b10: wWB_RegWrite <= wWB_PC4;
 	endcase
 end
 ///////////////////////////////////////
